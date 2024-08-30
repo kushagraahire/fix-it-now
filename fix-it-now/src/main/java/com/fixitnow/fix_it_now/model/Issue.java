@@ -35,5 +35,5 @@ public class Issue {
     private Date createdDate;
 
     @Column(name = "UPDATE_DATE", nullable = false)
-    private Date updateDate;
+    private Date updatedDate;
 }

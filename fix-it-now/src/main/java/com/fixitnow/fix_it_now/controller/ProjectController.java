@@ -30,11 +30,6 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.deleteProject(id));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<Object> getAllProjects() {
-        return ResponseEntity.ok(projectService.getAllProjects());
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<Object> getProject(@PathVariable Long id) {
         return ResponseEntity.ok(projectService.getProject(id));

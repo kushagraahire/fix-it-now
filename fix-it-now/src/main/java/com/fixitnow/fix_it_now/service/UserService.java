@@ -73,6 +73,7 @@ public class UserService {
                 if(user.getProfilePicture() != null){
                     existingUser.setProfilePicture(user.getProfilePicture());
                 }
+                existingUser.setUpdatedDate(getCurrentDate());
                 return userRepository.save(existingUser);
             }else{
                 logger.warn(USER_ID_NOT_FOUND, id);
@@ -89,7 +90,7 @@ public class UserService {
         try{
             if(userRepository.existsById(id)){
                 userRepository.deleteById(id);
-                return PROJECT_DELETE_SUCCESS +id;
+                return USER_DELETE_SUCCESS +id;
             }else{
                 logger.warn(USER_ID_NOT_FOUND, id);
                 throw new RuntimeException(NOT_FOUND);

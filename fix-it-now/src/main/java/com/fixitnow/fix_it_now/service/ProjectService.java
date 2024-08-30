@@ -58,7 +58,7 @@ public class ProjectService {
                 if(project.getName() != null){
                     existingProject.setName(project.getName());
                 }
-                project.setUpdatedDate(getCurrentDate());
+                existingProject.setUpdatedDate(getCurrentDate());
                 return projectRepository.save(existingProject);
             } else {
                 logger.warn(PROJECT_ID_NOT_FOUND, id);
@@ -85,17 +85,6 @@ public class ProjectService {
             logger.error(OPERATION_FAILED, e.getMessage(), e);
             throw new RuntimeException(INTERNAL_SERVER_ER, e);
         }
-    }
-
-
-    public List<Project> getAllProjects() {
-        try{
-            return projectRepository.findAll();
-        } catch (Exception e) {
-            logger.error(OPERATION_FAILED, e.getMessage(), e);
-            throw new RuntimeException(INTERNAL_SERVER_ER, e);
-        }
-
     }
 
 
