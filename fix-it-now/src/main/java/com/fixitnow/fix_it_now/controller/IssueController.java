@@ -1,8 +1,9 @@
 package com.fixitnow.fix_it_now.controller;
 
+import com.fixitnow.fix_it_now.Entity.IssueEntity;
 import com.fixitnow.fix_it_now.model.Issue;
-import com.fixitnow.fix_it_now.model.Project;
 import com.fixitnow.fix_it_now.service.IssueService;
+import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

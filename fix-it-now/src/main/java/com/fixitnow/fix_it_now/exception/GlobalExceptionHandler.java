@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Object> handleRuntimeException(RuntimeException e) {
-        if (e.getMessage().contains("Not Found")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }else if(e.getMessage().contains("Bad Request")){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        if (e.getCause().getMessage().contains("Not Found")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getCause().getMessage());
+        }else if(e.getCause().getMessage().contains("Bad Request")){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getCause().getMessage());
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }

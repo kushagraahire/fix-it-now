@@ -1,16 +1,18 @@
 package com.fixitnow.fix_it_now.service;
 
-import com.fixitnow.fix_it_now.model.Project;
+import com.fixitnow.fix_it_now.Entity.ProjectEntity;
+import com.fixitnow.fix_it_now.Entity.UserEntity;
 import com.fixitnow.fix_it_now.repository.ProjectRepository;
+import com.fixitnow.fix_it_now.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
+
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
-import com.fixitnow.fix_it_now.util.Utils;
 
 import static com.fixitnow.fix_it_now.constants.ResponseConstants.*;
 import static com.fixitnow.fix_it_now.util.Utils.getCurrentDate;
@@ -18,48 +20,51 @@ import static com.fixitnow.fix_it_now.util.Utils.getCurrentDate;
 @Service
 public class ProjectService {
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
         this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
-    public Project addProject(Project project) {
-        Objects.requireNonNull(project, BAD_REQUEST);
-        if(!validateAddProjectRequest(project)){
+    public ProjectEntity addProject(ProjectEntity projectEntity) {
+        Objects.requireNonNull(projectEntity, BAD_REQUEST);
+        if(!validateAddProjectRequest(projectEntity)){
             logger.warn(PROJECT_NAME_NULL_WR);
             throw new RuntimeException(BAD_REQUEST);
         }
         try{
-            project.setCreatedDate(getCurrentDate());
-            project.setUpdatedDate(getCurrentDate());
-            return projectRepository.save(project);
+            projectEntity.setCreatedDate(getCurrentDate());
+            projectEntity.setUpdatedDate(getCurrentDate());
+            projectEntity.setUserEntities(new ArrayList<>());
+            projectEntity.setIssueEntities(new ArrayList<>());
+            return projectRepository.save(projectEntity);
         } catch (Exception e){
             logger.error(OPERATION_FAILED, e.getMessage(), e);
             throw new RuntimeException(INTERNAL_SERVER_ER, e);
         }
     }
 
-
     @Transactional
-    public Project updateProjectDetails(Long id, Project project) {
+    public ProjectEntity updateProject(Long id, ProjectEntity projectEntity) {
         Objects.requireNonNull(id, BAD_REQUEST);
-        Objects.requireNonNull(project, BAD_REQUEST);
+        Objects.requireNonNull(projectEntity, BAD_REQUEST);
         try {
-            Optional<Project> existingProjectOptional = projectRepository.findById(id);
+            Optional<ProjectEntity> existingProjectOptional = projectRepository.findById(id);
             if (existingProjectOptional.isPresent()) {
-                Project existingProject = existingProjectOptional.get();
+                ProjectEntity existingProjectEntity = existingProjectOptional.get();
 
-                if(project.getId() != null){
-                    existingProject.setId(project.getId());
+                if(projectEntity.getName() != null){
+                    existingProjectEntity.setName(projectEntity.getName());
                 }
-                if(project.getName() != null){
-                    existingProject.setName(project.getName());
+                if(projectEntity.getDescription() != null){
+                    existingProjectEntity.setDescription(projectEntity.getDescription());
                 }
-                existingProject.setUpdatedDate(getCurrentDate());
-                return projectRepository.save(existingProject);
+                existingProjectEntity.setUpdatedDate(getCurrentDate());
+                return projectRepository.save(existingProjectEntity);
             } else {
                 logger.warn(PROJECT_ID_NOT_FOUND, id);
                 throw new RuntimeException(NOT_FOUND);
@@ -70,7 +75,20 @@ public class ProjectService {
         }
     }
 
+    @Transactional
+    public ProjectEntity addUserToProject(Long projectId, Long userId){
+        try{
+            ProjectEntity projectEntity = projectRepository.findById(projectId).orElseThrow(()->new RuntimeException(PROJECT_ID_NOT_FOUND));
+            UserEntity userEntity = userRepository.findById(userId).orElseThrow(()->new RuntimeException(USER_ID_NOT_FOUND));
+            projectEntity.getUserEntities().add(userEntity);
+            return projectRepository.save(projectEntity);
+        }catch (Exception e) {
+            logger.error(OPERATION_FAILED, e.getMessage(), e);
+            throw new RuntimeException(INTERNAL_SERVER_ER, e);
+        }
+    }
 
+    @Transactional
     public String deleteProject(Long id) {
         Objects.requireNonNull(id, BAD_REQUEST);
         try{
@@ -88,15 +106,15 @@ public class ProjectService {
     }
 
 
-    public Project getProject(Long id) {
+    public ProjectEntity getProject(Long id) {
         Objects.requireNonNull(id, BAD_REQUEST);
         try{
-            Optional<Project> project = projectRepository.findById(id);
+            Optional<ProjectEntity> project = projectRepository.findById(id);
             if(project.isPresent()){
                 return project.get();
             }else{
                 logger.warn(PROJECT_ID_NOT_FOUND, id);
-                throw new RuntimeException(NOT_FOUND);
+                throw new RuntimeException(NOT_FOUND+PROJECT_ID_NOT_FOUND);
             }
         } catch (Exception e) {
             logger.error(OPERATION_FAILED, e.getMessage(), e);
@@ -104,7 +122,7 @@ public class ProjectService {
         }
     }
 
-    private boolean validateAddProjectRequest(Project project) {
-        return project.getName() != null;
+    private boolean validateAddProjectRequest(ProjectEntity projectEntity) {
+        return projectEntity.getName() != null;
     }
 }

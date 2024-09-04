@@ -1,5 +1,7 @@
 package com.fixitnow.fix_it_now.service;
 
+import com.fixitnow.fix_it_now.Entity.IssueEntity;
+import com.fixitnow.fix_it_now.Mapper.IssueMapper;
 import com.fixitnow.fix_it_now.model.Issue;
 import com.fixitnow.fix_it_now.repository.IssueRepository;
 import com.fixitnow.fix_it_now.repository.ProjectRepository;
@@ -8,10 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.fixitnow.fix_it_now.Mapper.IssueMapper.toIssue;
+import static com.fixitnow.fix_it_now.Mapper.IssueMapper.toIssueEntity;
 import static com.fixitnow.fix_it_now.constants.IssueStatusConstants.*;
 import static com.fixitnow.fix_it_now.constants.ResponseConstants.*;
 import static com.fixitnow.fix_it_now.util.Utils.getCurrentDate;
@@ -30,6 +35,7 @@ public class IssueService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public Issue addIssue(Issue issue){
         Objects.requireNonNull(issue);
         if(!validateAddIssueRequest(issue)){
@@ -42,37 +48,35 @@ public class IssueService {
             }
             issue.setCreatedDate(getCurrentDate());
             issue.setUpdatedDate(getCurrentDate());
-            return issueRepository.save(issue);
+            IssueEntity issueEntity = toIssueEntity(issue);
+            issueEntity = issueRepository.save(issueEntity);
+            return toIssue(issueEntity);
         } catch (Exception e){
             logger.error(OPERATION_FAILED, e.getMessage(), e);
             throw new RuntimeException(INTERNAL_SERVER_ER, e);
         }
     }
 
+    @Transactional
     public Issue updateIssue(Long id, Issue issue){
         Objects.requireNonNull(id);
         Objects.requireNonNull(issue);
         try{
-            Optional<Issue> existingIssueOptional = issueRepository.findById(id);
+            Optional<IssueEntity> existingIssueOptional = issueRepository.findById(id);
             if(existingIssueOptional.isPresent()){
-                Issue existingIssue = existingIssueOptional.get();
+                IssueEntity existingIssueEntity = existingIssueOptional.get();
                 if(issue.getStatus() != null){
-                    existingIssue.setStatus(issue.getStatus());
+                    existingIssueEntity.setStatus(issue.getStatus());
                 }
                 if(issue.getDescription() != null){
-                    existingIssue.setDescription(issue.getDescription());
-                }
-                if(issue.getProject() != null){
-                    existingIssue = updateIssueProject(issue, existingIssue);
+                    existingIssueEntity.setDescription(issue.getDescription());
                 }
                 if(issue.getTitle() != null){
-                    existingIssue.setTitle(issue.getTitle());
+                    existingIssueEntity.setTitle(issue.getTitle());
                 }
-                if(issue.getAssignedUser() != null){
-                    existingIssue = updateIssueAssignedUser(issue, existingIssue);
-                }
-                existingIssue.setUpdatedDate(getCurrentDate());
-                return issueRepository.save(existingIssue);
+                existingIssueEntity.setUpdatedDate(getCurrentDate());
+                existingIssueEntity = issueRepository.save(existingIssueEntity);
+                return toIssue(existingIssueEntity);
             }else{
                 logger.warn(ISSUE_ID_NOT_FOUND, id);
                 throw new RuntimeException(NOT_FOUND);
@@ -83,6 +87,7 @@ public class IssueService {
         }
     }
 
+    @Transactional
     public String deleteIssue(Long id){
         Objects.requireNonNull(id);
         try{
@@ -102,9 +107,10 @@ public class IssueService {
     public Issue getIssue(Long id) {
         Objects.requireNonNull(id, BAD_REQUEST);
         try{
-            Optional<Issue> issue = issueRepository.findById(id);
+            Optional<IssueEntity> issue = issueRepository.findById(id);
             if(issue.isPresent()){
-                return issue.get();
+                IssueEntity issueEntity = issue.get();
+                return toIssue(issueEntity);
             }else{
                 logger.warn(ISSUE_ID_NOT_FOUND, id);
                 throw new RuntimeException(NOT_FOUND);
@@ -115,30 +121,7 @@ public class IssueService {
         }
     }
 
-    private Issue updateIssueAssignedUser(Issue issue, Issue existingIssue) {
-        if(userRepository.existsById(issue.getAssignedUser().getId())){
-            existingIssue.setAssignedUser(issue.getAssignedUser());
-        }else {
-            logger.warn(USER_ID_NOT_FOUND, issue.getAssignedUser().getId());
-            throw new RuntimeException(NOT_FOUND);
-        }
-        return existingIssue;
-    }
-
-    private Issue updateIssueProject(Issue issue, Issue existingIssue) {
-        if(projectRepository.existsById(issue.getProject().getId())){
-            existingIssue.setProject(issue.getProject());
-        }else {
-            logger.warn(PROJECT_ID_NOT_FOUND, issue.getProject().getId());
-            throw new RuntimeException(NOT_FOUND);
-        }
-        return existingIssue;
-    }
-
     private boolean validateAddIssueRequest(Issue issue) {
-        if(issue.getTitle() == null){
-            return false;
-        }
-        return true;
+        return issue.getTitle() != null;
     }
 }
