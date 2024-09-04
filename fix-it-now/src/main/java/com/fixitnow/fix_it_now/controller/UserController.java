@@ -1,6 +1,6 @@
 package com.fixitnow.fix_it_now.controller;
 
-import com.fixitnow.fix_it_now.model.User;
+import com.fixitnow.fix_it_now.Entity.UserEntity;
 import com.fixitnow.fix_it_now.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +17,13 @@ public class UserController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Object> addUser(@RequestBody User user){
-        return ResponseEntity.ok(userService.addUser(user));
+    public ResponseEntity<Object> addUser(@RequestBody UserEntity userEntity){
+        return ResponseEntity.ok(userService.addUser(userEntity));
     }
 
-    @PostMapping("/update/{id}")
-    public ResponseEntity<Object> updateUser(@PathVariable Long id, @RequestBody User user){
-        return ResponseEntity.ok(userService.updateUserDetails(id, user));
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Object> updateUser(@PathVariable Long id, @RequestBody UserEntity userEntity){
+        return ResponseEntity.ok(userService.updateUser(id, userEntity));
     }
 
     @DeleteMapping("/delete/{id}")
@@ -32,7 +32,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id){
+    public ResponseEntity<UserEntity> getUser(@PathVariable Long id){
         return ResponseEntity.ok(userService.getProject(id));
     }
 }
